@@ -51,23 +51,4 @@ class Tapccxt(Tap):
 
     def discover_streams(self) -> List[Stream]:
         """Return a list of discovered streams."""
-        # status
-        streams = []
-        # maybe I am overthinking this
-        # TODO: move into same stream
-        for exchange_config in self.config.get("exchanges"):
-            exchange_class = getattr(ccxt, exchange_config.get("id"))
-            exchange = exchange_class(
-                {
-                    "apiKey": exchange_config.get("api_key"),
-                    "secret": exchange_config.get("secret"),
-                }
-            )
-            ohlcv_stream = OHLCVStream(
-                tap=self,
-                exchange=exchange,
-                timeframe=exchange_config.get("timeframe"),
-                symbols=exchange_config.get("symbols"),
-            )
-            streams.append(ohlcv_stream)
-        return streams
+        return [OHLCVStream(tap=self)]

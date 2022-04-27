@@ -7,6 +7,7 @@ from singer_sdk import typing as th  # JSON Schema typing helpers
 
 from tap_ccxt.client import ccxtStream
 from ccxt.base.exchange import Exchange
+import ccxt
 from datetime import datetime
 import math
 
@@ -17,9 +18,11 @@ import math
 
 
 class OHLCVStream(ccxtStream):
+    name = "ohlcv"
+
     replication_key = "timestamp"
 
-    exchange: Exchange = None
+    exchanges: Dict[str, Exchange] = {}
     symbols: List[str] = []
     timeframe: str = None
 
@@ -56,19 +59,31 @@ class OHLCVStream(ccxtStream):
     ).to_dict()
 
     def __init__(self, *args, **kwargs) -> None:
-        self.exchange = kwargs.pop("exchange")
-        self.symbols = kwargs.pop("symbols")
-        self.timeframe = kwargs.pop("timeframe")
         super().__init__(*args, **kwargs)
+        for exchange_config in self.config.get("exchanges"):
+            exhange_id = exchange_config.get("id")
+            exchange_class = getattr(ccxt, exhange_id)
+            exchange = exchange_class(
+                {
+                    "apiKey": exchange_config.get("api_key"),
+                    "secret": exchange_config.get("secret"),
+                }
+            )
+            self.exchanges[exhange_id] = exchange
 
     @property
     def partitions(self) -> List[Dict[str, int]]:
-        return [{"symbol": symbol} for symbol in self.symbols]
-
-    @property
-    def name(self) -> str:
-        # namespace table somehow
-        return f"ohlcv_{self.exchange.id}"
+        partitions = []
+        for exchange_config in self.config.get("exchanges"):
+            for symbol in exchange_config.get("symbols"):
+                partitions.append(
+                    {
+                        "symbol": symbol,
+                        "exchange": exchange_config.get("id"),
+                        "timeframe": exchange_config.get("timeframe"),
+                    }
+                )
+        return partitions
 
     def get_records(self, context: Optional[dict]) -> Iterable[dict]:
         current_timestamp = math.floor(
@@ -77,15 +92,16 @@ class OHLCVStream(ccxtStream):
         prev_timestamp = None
         end_timestamp = datetime.now().timestamp() * 1000
         symbol = context.get("symbol")
-        # segment based on exchange?
+        exchange = self.exchanges[context.get("exchange")]
+        timeframe = context.get("timeframe")
         while current_timestamp < end_timestamp:
-            candles = self.exchange.fetchOHLCV(
-                symbol, timeframe=self.timeframe, since=current_timestamp
+            candles = exchange.fetchOHLCV(
+                symbol, timeframe=timeframe, since=current_timestamp
             )
             for candle in candles:
                 yield dict(
                     symbol=symbol,
-                    exchange=self.exchange.id,
+                    exchange=exchange.id,
                     timestamp=datetime.fromtimestamp(candle[0] / 1000.0),
                     open=candle[1],
                     high=candle[2],
