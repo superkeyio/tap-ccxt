@@ -54,7 +54,7 @@ class Tapccxt(Tap):
         # status
         streams = []
         # maybe I am overthinking this
-        # exchange stream?
+        # TODO: move into same stream
         for exchange_config in self.config.get("exchanges"):
             exchange_class = getattr(ccxt, exchange_config.get("id"))
             exchange = exchange_class(

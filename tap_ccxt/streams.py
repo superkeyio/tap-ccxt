@@ -17,8 +17,6 @@ import math
 
 
 class OHLCVStream(ccxtStream):
-    name = "ohlcv"
-
     replication_key = "timestamp"
 
     exchange: Exchange = None
@@ -53,7 +51,7 @@ class OHLCVStream(ccxtStream):
             th.NumberType,
             required=True,
         ),
-        th.Property("exchange_id", th.StringType, required=True),
+        th.Property("exchange", th.StringType, required=True),
         th.Property("symbol", th.StringType, required=True),
     ).to_dict()
 
@@ -62,16 +60,21 @@ class OHLCVStream(ccxtStream):
         self.symbols = kwargs.pop("symbols")
         self.timeframe = kwargs.pop("timeframe")
         super().__init__(*args, **kwargs)
-        self.STATE_MSG_FREQUENCY = 100
 
     @property
     def partitions(self) -> List[Dict[str, int]]:
         return [{"symbol": symbol} for symbol in self.symbols]
 
+    @property
+    def name(self) -> str:
+        # namespace table somehow
+        return f"ohlcv_{self.exchange.id}"
+
     def get_records(self, context: Optional[dict]) -> Iterable[dict]:
         current_timestamp = math.floor(
             self.get_starting_timestamp(context).timestamp() * 1000
         )
+        prev_timestamp = None
         end_timestamp = datetime.now().timestamp() * 1000
         symbol = context.get("symbol")
         # segment based on exchange?
@@ -82,7 +85,7 @@ class OHLCVStream(ccxtStream):
             for candle in candles:
                 yield dict(
                     symbol=symbol,
-                    exchange_id=self.exchange.id,
+                    exchange=self.exchange.id,
                     timestamp=datetime.fromtimestamp(candle[0] / 1000.0),
                     open=candle[1],
                     high=candle[2],
@@ -91,3 +94,6 @@ class OHLCVStream(ccxtStream):
                     volume=candle[5],
                 )
                 current_timestamp = candle[0]
+            if current_timestamp == prev_timestamp:
+                break
+            prev_timestamp = current_timestamp
