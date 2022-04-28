@@ -31,7 +31,20 @@ class Tapccxt(Tap):
                     ),
                     th.Property(
                         "symbols",
-                        th.ArrayType(th.StringType),
+                        th.ArrayType(
+                            th.ObjectType(
+                                th.Property(
+                                    "symbol",
+                                    th.StringType,
+                                    required=True,
+                                ),
+                                th.Property(
+                                    "timeframe",
+                                    th.StringType,
+                                    required=True,
+                                ),
+                            )
+                        ),
                         required=True,
                     ),
                     th.Property(
@@ -46,7 +59,10 @@ class Tapccxt(Tap):
             ),
             required=True,
         ),
-        th.Property("start_date", th.DateTimeType),
+        th.Property(
+            "start_date",
+            th.DateTimeType,
+        ),
     ).to_dict()
 
     def discover_streams(self) -> List[Stream]:

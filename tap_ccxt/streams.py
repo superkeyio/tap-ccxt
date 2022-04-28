@@ -1,7 +1,8 @@
 """Stream type classes for tap-ccxt."""
 
 from pathlib import Path
-from typing import Any, Dict, Optional, Union, List, Iterable
+from typing import Any, Dict, Optional, Tuple, Union, List, Iterable
+from pendulum import date
 
 from singer_sdk import typing as th  # JSON Schema typing helpers
 
@@ -15,8 +16,6 @@ import math
 # SCHEMAS_DIR = Path(__file__).parent / Path("./schemas")
 # TODO: - Override `UsersStream` and `GroupsStream` with your own stream definition.
 #       - Copy-paste as many times as needed to create multiple stream types.
-
-
 class OHLCVStream(ccxtStream):
     name = "ohlcv"
 
@@ -25,6 +24,7 @@ class OHLCVStream(ccxtStream):
     exchanges: Dict[str, Exchange] = {}
     symbols: List[str] = []
     timeframe: str = None
+    start_dates: Dict[Tuple[str, str, str], datetime] = {}
 
     schema = th.PropertiesList(
         th.Property("timestamp", th.DateTimeType, required=True),
@@ -61,34 +61,32 @@ class OHLCVStream(ccxtStream):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         for exchange_config in self.config.get("exchanges"):
-            exhange_id = exchange_config.get("id")
-            exchange_class = getattr(ccxt, exhange_id)
+            exchange_id = exchange_config.get("id")
+            exchange_class = getattr(ccxt, exchange_id)
             exchange = exchange_class(
                 {
                     "apiKey": exchange_config.get("api_key"),
                     "secret": exchange_config.get("secret"),
                 }
             )
-            self.exchanges[exhange_id] = exchange
+            self.exchanges[exchange_id] = exchange
 
     @property
     def partitions(self) -> List[Dict[str, int]]:
         partitions = []
         for exchange_config in self.config.get("exchanges"):
-            for symbol in exchange_config.get("symbols"):
+            for symbol_config in exchange_config.get("symbols"):
                 partitions.append(
                     {
-                        "symbol": symbol,
+                        "symbol": symbol_config.get("symbol"),
                         "exchange": exchange_config.get("id"),
-                        "timeframe": exchange_config.get("timeframe"),
+                        "timeframe": symbol_config.get("timeframe"),
                     }
                 )
         return partitions
 
     def get_records(self, context: Optional[dict]) -> Iterable[dict]:
-        current_timestamp = math.floor(
-            self.get_starting_timestamp(context).timestamp() * 1000
-        )
+        current_timestamp = self.get_starting_timestamp(context).timestamp() * 1000
         prev_timestamp = None
         end_timestamp = datetime.now().timestamp() * 1000
         symbol = context.get("symbol")

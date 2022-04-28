@@ -2,18 +2,20 @@
     "exchanges": [
         {
             "id": "binance",
-            "timeframe": "1m",
             "symbols": [
-                "TRIBE/USDT",
-                "BTC/USDT"
+                {
+                    "symbol": "TRIBE/USDT",
+                    "timeframe": "1m"
+                }
             ]
         },
         {
             "id": "ftx",
-            "timeframe": "1m",
             "symbols": [
-                "ETH/USD",
-                "BTC/USD"
+                {
+                    "symbol": "BTC/USD",
+                    "timeframe": "1m"
+                }
             ]
         }
     ],
