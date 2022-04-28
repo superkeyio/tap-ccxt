@@ -86,7 +86,9 @@ class OHLCVStream(ccxtStream):
         return partitions
 
     def get_records(self, context: Optional[dict]) -> Iterable[dict]:
-        current_timestamp = self.get_starting_timestamp(context).timestamp() * 1000
+        current_timestamp = math.floor(
+            self.get_starting_timestamp(context).timestamp() * 1000
+        )
         prev_timestamp = None
         end_timestamp = datetime.now().timestamp() * 1000
         symbol = context.get("symbol")
