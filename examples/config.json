@@ -1,15 +1,6 @@
 {
     "exchanges": [
         {
-            "id": "binance",
-            "symbols": [
-                {
-                    "symbol": "TRIBE/USDT",
-                    "timeframe": "1m"
-                }
-            ]
-        },
-        {
             "id": "ftx",
             "symbols": [
                 {
@@ -19,5 +10,5 @@
             ]
         }
     ],
-    "start_date": "2022-04-26T00:00:00Z"
+    "start_date": "2022-01-01T00:00:00Z"
 }

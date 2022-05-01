@@ -2,7 +2,9 @@
 
 from pathlib import Path
 from typing import Any, Dict, Optional, Tuple, Union, List, Iterable
+import backoff
 from pendulum import date
+import requests
 
 from singer_sdk import typing as th  # JSON Schema typing helpers
 
@@ -26,6 +28,8 @@ class OHLCVStream(ccxtStream):
     symbols: List[str] = []
     timeframe: str = None
     start_dates: Dict[Tuple[str, str, str], datetime] = {}
+
+    STATE_MSG_FREQUENCY = 100
 
     schema = th.PropertiesList(
         th.Property("timestamp", th.DateTimeType, required=True),
@@ -86,6 +90,7 @@ class OHLCVStream(ccxtStream):
                 )
         return partitions
 
+    @backoff.on_exception(backoff.expo, requests.exceptions.RequestException)
     def get_records(self, context: Optional[dict]) -> Iterable[dict]:
         current_timestamp = math.floor(
             self.get_starting_timestamp(context).timestamp() * 1000
