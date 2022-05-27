@@ -22,7 +22,7 @@ import math
 class OHLCVStream(ccxtStream):
     name = "ohlcv"
 
-    primary_keys = ["exchange", "symbol", "timeframe", "timestamp"]
+    primary_keys = ["exchange", "base", "quote", "timeframe", "timestamp"]
     replication_key = "timestamp"
 
     exchanges: Dict[str, Exchange]
