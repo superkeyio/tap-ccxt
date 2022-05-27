@@ -2,13 +2,14 @@
     "exchanges": [
         {
             "id": "ftx",
-            "symbols": [
+            "pairs": [
                 {
-                    "symbol": "BTC/USD",
-                    "timeframe": "1m"
+                    "base": "BTC",
+                    "quote": "USD",
+                    "timeframe": "1m",
+                    "start_date": "2022-01-01T00:00:00Z"
                 }
             ]
         }
-    ],
-    "start_date": "2022-01-01T00:00:00Z"
+    ]
 }

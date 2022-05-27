@@ -30,17 +30,27 @@ class Tapccxt(Tap):
                         default="1m",
                     ),
                     th.Property(
-                        "symbols",
+                        "pairs",
                         th.ArrayType(
                             th.ObjectType(
                                 th.Property(
-                                    "symbol",
+                                    "base",
+                                    th.StringType,
+                                    required=True,
+                                ),
+                                th.Property(
+                                    "quote",
                                     th.StringType,
                                     required=True,
                                 ),
                                 th.Property(
                                     "timeframe",
                                     th.StringType,
+                                    required=True,
+                                ),
+                                th.Property(
+                                    "start_date",
+                                    th.DateTimeType,
                                     required=True,
                                 ),
                             )
@@ -58,10 +68,6 @@ class Tapccxt(Tap):
                 )
             ),
             required=True,
-        ),
-        th.Property(
-            "start_date",
-            th.DateTimeType,
         ),
     ).to_dict()
 

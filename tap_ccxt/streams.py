@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Any, Dict, Optional, Tuple, Union, List, Iterable
 import backoff
 from pendulum import date
+import pendulum
 import requests
 
 from singer_sdk import typing as th  # JSON Schema typing helpers
@@ -24,12 +25,11 @@ class OHLCVStream(ccxtStream):
     primary_keys = ["exchange", "symbol", "timeframe", "timestamp"]
     replication_key = "timestamp"
 
-    exchanges: Dict[str, Exchange] = {}
-    symbols: List[str] = []
+    exchanges: Dict[str, Exchange]
     timeframe: str = None
-    start_dates: Dict[Tuple[str, str, str], datetime] = {}
+    start_dates: Dict[Tuple[str, str, str], datetime]
 
-    STATE_MSG_FREQUENCY = 100
+    STATE_MSG_FREQUENCY = 1000
 
     schema = th.PropertiesList(
         th.Property("timestamp", th.DateTimeType, required=True),
@@ -60,11 +60,13 @@ class OHLCVStream(ccxtStream):
             required=True,
         ),
         th.Property("exchange", th.StringType, required=True),
-        th.Property("symbol", th.StringType, required=True),
+        th.Property("base", th.StringType, required=True),
+        th.Property("quote", th.StringType, required=True),
     ).to_dict()
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
+        self.exchanges = {}
         for exchange_config in self.config.get("exchanges"):
             exchange_id = exchange_config.get("id")
             exchange_class = getattr(ccxt, exchange_id)
@@ -80,24 +82,45 @@ class OHLCVStream(ccxtStream):
     def partitions(self) -> List[Dict[str, int]]:
         partitions = []
         for exchange_config in self.config.get("exchanges"):
-            for symbol_config in exchange_config.get("symbols"):
+            for pair_config in exchange_config.get("pairs"):
                 partitions.append(
                     {
-                        "symbol": symbol_config.get("symbol"),
+                        "base": pair_config.get("base"),
+                        "quote": pair_config.get("quote"),
                         "exchange": exchange_config.get("id"),
-                        "timeframe": symbol_config.get("timeframe"),
+                        "timeframe": pair_config.get("timeframe"),
                     }
                 )
         return partitions
 
+    def _get_pair_config(self, context: Optional[dict]):
+        exchange_config = next(
+            exchange_config
+            for exchange_config in self.config.get("exchanges")
+            if exchange_config.get("id") == context.get("exchange")
+        )
+        pair_config = next(
+            pair_config
+            for pair_config in exchange_config.get("pairs")
+            if pair_config["base"] == context.get("base")
+            and pair_config["quote"] == context.get("quote")
+        )
+        return pair_config
+
     @backoff.on_exception(backoff.expo, requests.exceptions.RequestException)
     def get_records(self, context: Optional[dict]) -> Iterable[dict]:
+        pair_config = self._get_pair_config(context)
         current_timestamp = math.floor(
-            self.get_starting_timestamp(context).timestamp() * 1000
+            (
+                self.get_starting_timestamp(context)
+                or pendulum.parse(pair_config.get("start_date"))
+            ).timestamp()
+            * 1000
         )
         prev_timestamp = None
-        end_timestamp = datetime.now().timestamp() * 1000
-        symbol = context.get("symbol")
+        end_timestamp = datetime.now().timestamp() * 1000  # milliseconds
+        base, quote = context.get("base"), context.get("quote")
+        symbol = f"{base}/{quote}"
         exchange = self.exchanges[context.get("exchange")]
         timeframe = context.get("timeframe")
         while current_timestamp < end_timestamp:
@@ -106,7 +129,8 @@ class OHLCVStream(ccxtStream):
             )
             for candle in candles:
                 yield dict(
-                    symbol=symbol,
+                    base=base,
+                    quote=quote,
                     exchange=exchange.id,
                     timestamp=datetime.fromtimestamp(candle[0] / 1000.0),
                     open=candle[1],

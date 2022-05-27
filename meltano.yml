@@ -1,6 +1,6 @@
 version: 1
 send_anonymous_usage_stats: true
-project_id: tap-ccxt
+project_id: f4b99e2d-40c0-4332-83c0-c8b39809708b
 plugins:
   extractors:
   - name: tap-ccxt
@@ -11,15 +11,13 @@ plugins:
     - catalog
     - discover
     config:
-      start_date: '2010-01-01T00:00:00Z'
-    settings:
-    # TODO: To configure using Meltano, declare settings and their types here:
-    - name: username
-    - name: password
-      kind: password
-    - name: start_date
-      value: '2010-01-01T00:00:00Z'
+      exchanges:
+      - id: ftx
+        pairs:
+        - base: BTC
+          quote: USD
+          timeframe: 1m
+          start_date: '2022-05-24T00:00:00Z'
   loaders:
-  - name: target-jsonl
-    variant: andyh1203
-    pip_url: target-jsonl
+  - name: target-csv
+    pip_url: target-csv
