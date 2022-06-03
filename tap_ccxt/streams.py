@@ -141,5 +141,6 @@ class OHLCVStream(ccxtStream):
                 )
                 current_timestamp = candle[0]
             if current_timestamp == prev_timestamp:
-                break
+                # Skip a day
+                current_timestamp += 1000 * 60 * 60 * 24
             prev_timestamp = current_timestamp

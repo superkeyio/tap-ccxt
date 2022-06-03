@@ -1,12 +1,12 @@
 {
     "exchanges": [
         {
-            "id": "ftx",
+            "id": "gateio",
             "pairs": [
                 {
-                    "base": "BTC",
-                    "quote": "USD",
-                    "timeframe": "1m",
+                    "base": "FEI",
+                    "quote": "USDT",
+                    "timeframe": "1h",
                     "start_date": "2022-01-01T00:00:00Z"
                 }
             ]
