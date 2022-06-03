@@ -11,6 +11,7 @@ from singer_sdk import typing as th  # JSON Schema typing helpers
 
 from tap_ccxt.client import ccxtStream
 from ccxt.base.exchange import Exchange
+from ccxt.base.errors import BadSymbol
 import ccxt
 from datetime import datetime
 import math
@@ -124,9 +125,14 @@ class OHLCVStream(ccxtStream):
         exchange = self.exchanges[context.get("exchange")]
         timeframe = context.get("timeframe")
         while current_timestamp < end_timestamp:
-            candles = exchange.fetchOHLCV(
-                symbol, timeframe=timeframe, since=current_timestamp
-            )
+            try:
+                candles = exchange.fetchOHLCV(
+                    symbol, timeframe=timeframe, since=current_timestamp
+                )
+            except BadSymbol:
+                # Check if using underscores work
+                symbol = f"{base}_{quote}"
+                continue
             for candle in candles:
                 yield dict(
                     base=base,

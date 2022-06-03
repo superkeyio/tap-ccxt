@@ -116,7 +116,7 @@ uvloop = ["uvloop (>=0.15.2)"]
 
 [[package]]
 name = "ccxt"
-version = "1.80.86"
+version = "1.84.75"
 description = "A JavaScript / Python / PHP cryptocurrency trading library with support for 130+ exchanges"
 category = "main"
 optional = false
@@ -1008,8 +1008,8 @@ black = [
     {file = "black-22.3.0.tar.gz", hash = "sha256:35020b8886c022ced9282b51b5a875b6d1ab0c387b31a065b84db7c33085ca79"},
 ]
 ccxt = [
-    {file = "ccxt-1.80.86-py2.py3-none-any.whl", hash = "sha256:238ac46a84919635b6963cfd6f6733acafa44ab7295335602d648cf44f168815"},
-    {file = "ccxt-1.80.86.tar.gz", hash = "sha256:a15f847b11448d29f31d182b93e176d1ea6a00eeed5c887d480127013e7865db"},
+    {file = "ccxt-1.84.75-py2.py3-none-any.whl", hash = "sha256:f8f8cf8e9f7d028fd30491b3bc7ce1912ccf8a1a60ef896e13bf3c80893f4d93"},
+    {file = "ccxt-1.84.75.tar.gz", hash = "sha256:8af7ff6c269a0b64a109b5379b56f4c13b017b2d48167b37c35e1c955f5e3f92"},
 ]
 certifi = [
     {file = "certifi-2021.10.8-py2.py3-none-any.whl", hash = "sha256:d62a0163eb4c2344ac042ab2bdf75399a71a2d8c7d47eac2e2ee91b9d6339569"},

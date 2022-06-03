@@ -4,7 +4,7 @@
             "id": "gateio",
             "pairs": [
                 {
-                    "base": "FEI",
+                    "base": "RAI",
                     "quote": "USDT",
                     "timeframe": "1h",
                     "start_date": "2022-01-01T00:00:00Z"
